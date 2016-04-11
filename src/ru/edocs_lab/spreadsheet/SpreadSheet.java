@@ -11,24 +11,27 @@ public final class SpreadSheet {
 	public static final int MAX_ROWS = 99;
 	public static final int MAX_COLS = 26;
 	
-	private int mRowCount;
-	private int mColCount;
+	private final int mRowCount;
+	private final int mColCount;
+	private final String mSeparator;
 	private Cell mSS[][];
 	private HashSet<String> mPassedCells;
-	private CountDownLatch mInitRowCounter;
+	private CountDownLatch mInitRowCounter;	
 	
-	private SpreadSheet(int rowCount, int colCount, String lines[]) {
-		setRowCount(rowCount);
-		setColCount(colCount);
+	private SpreadSheet(int rowCount, int colCount, String lines[], String sep) {
+		mRowCount = rowCount;
+		mColCount = colCount;
+		mSeparator = sep;
 		mSS = new Cell[rowCount][colCount];
-		mPassedCells = new HashSet<>();
+		mPassedCells = new HashSet<>();		
 	}
 	
-	public static String[][] solve(int rowCount, int colCount, String lines[]) {
-		if (0<rowCount && rowCount<=MAX_ROWS && 0<colCount && colCount<=MAX_COLS && lines!=null) {
-			SpreadSheet ss = new SpreadSheet(rowCount, colCount, lines);
-			ss.initCells(lines); //в многопоточном режиме вычисляем всё, что без ссылок
-			ss.evaluateCells(); //рекурсивно дорешиваем оставшиеся ячейки со ссылками
+	public static String[][] solve(int rowCount, int colCount, String lines[], String sep) {
+		if (0<rowCount && rowCount<=MAX_ROWS && 0<colCount && colCount<=MAX_COLS && lines!=null
+				&& sep!=null && !sep.equals("")) {
+			SpreadSheet ss = new SpreadSheet(rowCount, colCount, lines, sep);
+			ss.initCells(lines); //РІ РјРЅРѕРіРѕРїРѕС‚РѕС‡РЅРѕРј СЂРµР¶РёРјРµ РІС‹С‡РёСЃР»СЏРµРј РІСЃС‘, С‡С‚Рѕ Р±РµР· СЃСЃС‹Р»РѕРє
+			ss.evaluateCells(); //СЂРµРєСѓСЂСЃРёРІРЅРѕ РґРѕСЂРµС€РёРІР°РµРј РѕСЃС‚Р°РІС€РёРµСЃСЏ СЏС‡РµР№РєРё СЃРѕ СЃСЃС‹Р»РєР°РјРё
 			return ss.toArray();
 		} else {
 			return null;
@@ -36,14 +39,14 @@ public final class SpreadSheet {
 	}
 	
 	private void initCells(String lines[]) {		
-		//не учитываем лишние строки (обрезаем до указанной размерности)
+		//РЅРµ СѓС‡РёС‚С‹РІР°РµРј Р»РёС€РЅРёРµ СЃС‚СЂРѕРєРё (РѕР±СЂРµР·Р°РµРј РґРѕ СѓРєР°Р·Р°РЅРЅРѕР№ СЂР°Р·РјРµСЂРЅРѕСЃС‚Рё)
 		int inputRowsMin = getRowCount()<=lines.length ? getRowCount() : lines.length;
 		setInitRowCounter(inputRowsMin);
 		ExecutorService execServ = Executors.newFixedThreadPool(inputRowsMin);
 		for(int row=0; row<inputRowsMin; row++) {
 			execServ.execute(new InitRowThread(row, lines[row]));
 		}
-		//добиваем недостающие строки ячейками с NULL'ями
+		//РґРѕР±РёРІР°РµРј РЅРµРґРѕСЃС‚Р°СЋС‰РёРµ СЃС‚СЂРѕРєРё СЏС‡РµР№РєР°РјРё СЃ NULL'СЏРјРё
 		for(int row=inputRowsMin; row<getRowCount(); row++) {
 			parseInputLine(row, "");
 		}
@@ -72,8 +75,8 @@ public final class SpreadSheet {
 	private void parseInputLine(int row, String line) {
 		int inputColsMin;
 		if (line != null) {
-			String cols[] = line.split("\t");
-			//не учитываем лишние данные (обрезаем до указанной размерности)
+			String cols[] = line.split(mSeparator);
+			//РЅРµ СѓС‡РёС‚С‹РІР°РµРј Р»РёС€РЅРёРµ РґР°РЅРЅС‹Рµ (РѕР±СЂРµР·Р°РµРј РґРѕ СѓРєР°Р·Р°РЅРЅРѕР№ СЂР°Р·РјРµСЂРЅРѕСЃС‚Рё)
 			inputColsMin = getColCount()<=cols.length ? getColCount() : cols.length;
 			for(int col=0; col<inputColsMin; col++) {
 				createCell(row, col, cols[col]);
@@ -81,7 +84,7 @@ public final class SpreadSheet {
 		} else {
 			inputColsMin = 0;
 		}	
-		//добиваем недостающие ячейки NULL'ями
+		//РґРѕР±РёРІР°РµРј РЅРµРґРѕСЃС‚Р°СЋС‰РёРµ СЏС‡РµР№РєРё NULL'СЏРјРё
 		for(int col=inputColsMin; col<getColCount(); col++) {
 			createCell(row, col, "");
 		}
@@ -97,15 +100,15 @@ public final class SpreadSheet {
 		case '\'':
 			mSS[row][col] = new TextCell(label, inStr);					
 			break;
-		case '=': //ячейка с голой ссылкой обрабатывается отдельно, потому что 
-			//результат вычисления может быть как числом, так и текстом или NULLём,
-			//а ссылка на текст или NULL в данном случае не является ошибкой.
+		case '=': //СЏС‡РµР№РєР° СЃ РіРѕР»РѕР№ СЃСЃС‹Р»РєРѕР№ РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚СЃСЏ РѕС‚РґРµР»СЊРЅРѕ, РїРѕС‚РѕРјСѓ С‡С‚Рѕ 
+			//СЂРµР·СѓР»СЊС‚Р°С‚ РІС‹С‡РёСЃР»РµРЅРёСЏ РјРѕР¶РµС‚ Р±С‹С‚СЊ РєР°Рє С‡РёСЃР»РѕРј, С‚Р°Рє Рё С‚РµРєСЃС‚РѕРј РёР»Рё NULLС‘Рј,
+			//Р° СЃСЃС‹Р»РєР° РЅР° С‚РµРєСЃС‚ РёР»Рё NULL РІ РґР°РЅРЅРѕРј СЃР»СѓС‡Р°Рµ РЅРµ СЏРІР»СЏРµС‚СЃСЏ РѕС€РёР±РєРѕР№.
 			if (inStr.toUpperCase().matches("^=[A-Z][1-9][0-9]*$")) {
 				mSS[row][col] = new LinkCell(label, inStr);
 				break;
 			}
-			//для прочих выражений с= проходим в default
-		default: //числа без=
+			//РґР»СЏ РїСЂРѕС‡РёС… РІС‹СЂР°Р¶РµРЅРёР№ СЃ= РїСЂРѕС…РѕРґРёРј РІ default
+		default: //С‡РёСЃР»Р° Р±РµР·=
 			mSS[row][col] = new NumberCell(label, inStr); 
 		}
 	}
@@ -132,11 +135,11 @@ public final class SpreadSheet {
 		}
 		int idx[] = new int[2];
 		try{
-			idx[0] = Integer.valueOf(label.substring(1))-1;//строка			
+			idx[0] = Integer.valueOf(label.substring(1))-1;//СЃС‚СЂРѕРєР°			
 		} catch(NumberFormatException e) {
 			return null;
 		}
-		idx[1] = (int)(label.charAt(0) - 'A');//столбец
+		idx[1] = (int)(label.charAt(0) - 'A');//СЃС‚РѕР»Р±РµС†
 		if (0<=idx[0] && idx[0]<getRowCount() && 0<=idx[1] && idx[1]<getColCount()) {
 			return idx;
 		} else {
@@ -157,15 +160,15 @@ public final class SpreadSheet {
 		TextCell(String label, String inStr) {
 			super(label, inStr);
 			setType(Type.TEXT);
-			evaluateLocal();
+			evaluateLocally();
 		}		
-		protected void evaluateLocal() {
+		protected void evaluateLocally() {
 			setOutput(getInput().substring(1));
 			setProcessed(true);
 		}
 		public void evaluate() {
 			if (!isProcessed()) {
-				evaluateLocal();
+				evaluateLocally();
 			}
 		}
 	}	
@@ -174,14 +177,14 @@ public final class SpreadSheet {
 		NullCell(String label) {
 			super(label, "");
 			setType(Type.NULL);
-			evaluateLocal();
+			evaluateLocally();
 		}		
-		protected void evaluateLocal() {
+		protected void evaluateLocally() {
 			setProcessed(true);
 		}
 		public void evaluate() {
 			if (!isProcessed()) {
-				evaluateLocal();
+				evaluateLocally();
 			}
 		}
 	}
@@ -190,14 +193,14 @@ public final class SpreadSheet {
 		LinkCell(String label, String inStr) {
 			super(label, inStr.replace(" ", "").toUpperCase());
 			setType(Type.LINK);
-			evaluateLocal();
+			evaluateLocally();
 		}		
-		protected void evaluateLocal() {
+		protected void evaluateLocally() {
 			String linkLabel = getInput().substring(1);
 			if(linkLabel.equals(getLabel())) {
 				setError(ErrMsg.LOOP);
 			} else if (getIdxByLabel(linkLabel) == null) {
-				setError(ErrMsg.OUTOFRNG);
+				setError(ErrMsg.OUT_OF_RANGE);
 			}
 		}
 		public void evaluate() {			
@@ -211,10 +214,10 @@ public final class SpreadSheet {
 						setType(link.getType());
 						setOutput(link.getOutput());						
 						setProcessed(true);
-					} else {//нет такой ячейки
-						setError(ErrMsg.OUTOFRNG);
+					} else {//РЅРµС‚ С‚Р°РєРѕР№ СЏС‡РµР№РєРё
+						setError(ErrMsg.OUT_OF_RANGE);
 					}
-				} else {//ячейка не добавилась => уже проходили => зациклились
+				} else {//СЏС‡РµР№РєР° РЅРµ РґРѕР±Р°РІРёР»Р°СЃСЊ => СѓР¶Рµ РїСЂРѕС…РѕРґРёР»Рё => Р·Р°С†РёРєР»РёР»РёСЃСЊ
 					setError(ErrMsg.CYCLE);
 				}
 			}
@@ -225,9 +228,9 @@ public final class SpreadSheet {
 		NumberCell(String label, String inStr) {
 			super(label, inStr.replace(" ", "").toUpperCase());
 			setType(Type.NUMBER);
-			evaluateLocal();
+			evaluateLocally();
 		}		
-		protected void evaluateLocal() {
+		protected void evaluateLocally() {
 			if (getInput().matches(SHLAK_PTRN)) {
 				setError(ErrMsg.GARBAGE);
 				return;
@@ -243,7 +246,7 @@ public final class SpreadSheet {
 				return;
 			}
 			if (getInput().matches("^=.+/0.*")) {
-				setError(ErrMsg.DIVBY0);
+				setError(ErrMsg.DIV_BY_ZERO);
 				return;
 			}
 			if (getInput().matches("^=.*" + getLabel() + "[^0-9]*.*")) {
@@ -272,9 +275,9 @@ public final class SpreadSheet {
 					setOutput(String.valueOf(val));
 					setProcessed(true);
 				} else {
-					//либо parseExpression установил ошибку DIV_BY_ZERO
-					//либо parseExpression->getCurrentOperandOrStop установил ошибку по ссылке
-					//в любом случае, ячейка вычислена
+					//Р»РёР±Рѕ parseExpression СѓСЃС‚Р°РЅРѕРІРёР» РѕС€РёР±РєСѓ DIV_BY_ZERO
+					//Р»РёР±Рѕ parseExpression->getCurrentOperandOrStop СѓСЃС‚Р°РЅРѕРІРёР» РѕС€РёР±РєСѓ РїРѕ СЃСЃС‹Р»РєРµ
+					//РІ Р»СЋР±РѕРј СЃР»СѓС‡Р°Рµ, СЏС‡РµР№РєР° РІС‹С‡РёСЃР»РµРЅР°
 				}
 			} catch (NumberFormatException e) {
 				setError(ErrMsg.GARBAGE);
@@ -290,8 +293,8 @@ public final class SpreadSheet {
 				Long operand;
 				while(part != null) {
 					operand = getCurrentOperandOrStop(part.substring(1));
-					if (operand == null) {//установили ошибку из ячейки по ссылке
-						return null; //дальше не надо
+					if (operand == null) {//СѓСЃС‚Р°РЅРѕРІРёР»Рё РѕС€РёР±РєСѓ РёР· СЏС‡РµР№РєРё РїРѕ СЃСЃС‹Р»РєРµ
+						return null; //РґР°Р»СЊС€Рµ РЅРµ РЅР°РґРѕ
 					} 
 					switch(part.charAt(0)) {
 					case '=':
@@ -310,7 +313,7 @@ public final class SpreadSheet {
 						if (operand != 0) {
 							total = total / operand;
 						} else {
-							setError(ErrMsg.DIVBY0);
+							setError(ErrMsg.DIV_BY_ZERO);
 							return null;
 						}							
 					}
@@ -321,7 +324,7 @@ public final class SpreadSheet {
 		}
 		private Long getCurrentOperandOrStop(String str) throws NumberFormatException {
 			Long operand = null;
-			if (str.charAt(0) > '9') {//начинается с буквы => операнд-ссылка
+			if (str.charAt(0) > '9') {//РЅР°С‡РёРЅР°РµС‚СЃСЏ СЃ Р±СѓРєРІС‹ => РѕРїРµСЂР°РЅРґ-СЃСЃС‹Р»РєР°
 				Cell link = getCellByLabel(str);
 				if (link != null) {
 					if (!link.isProcessed()) {
@@ -334,21 +337,21 @@ public final class SpreadSheet {
 						setProcessed(true);
 						break;
 					case TEXT:
-						setError(ErrMsg.TEXTOPRND);
+						setError(ErrMsg.TEXT_OPERAND);
 						break;
 					case NULL:
-						setError(ErrMsg.NULLOPRND);
+						setError(ErrMsg.NULL_OPERAND);
 						break;
 					case NUMBER:
 						operand = Long.parseLong(link.getOutput());
 						break;
 					default:
-						//не может быть
+						//РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ
 					}
-				} else {//нет такой ячейки
-					setError(ErrMsg.OUTOFRNG);
+				} else {//РЅРµС‚ С‚Р°РєРѕР№ СЏС‡РµР№РєРё
+					setError(ErrMsg.OUT_OF_RANGE);
 				}
-			} else { //просто число
+			} else { //РїСЂРѕСЃС‚Рѕ С‡РёСЃР»Рѕ
 				operand = Long.parseLong(str);
 			}						
 			return operand;
@@ -360,16 +363,8 @@ public final class SpreadSheet {
 		return mRowCount;
 	}
 
-	private void setRowCount(int rowCount) {
-		mRowCount = rowCount;
-	}
-
 	private int getColCount() {
 		return mColCount;
-	}
-
-	private void setColCount(int colCount) {
-		mColCount = colCount;
 	}
 
 	private HashSet<String> getPassedCells() {

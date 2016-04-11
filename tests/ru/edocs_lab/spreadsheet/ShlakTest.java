@@ -17,7 +17,7 @@ public class ShlakTest {
 		for(int col=0; col<10; col++) {
 			result[0][col] = "#" + ErrMsg.GARBAGE;
 		}
-		ssResult = SpreadSheet.solve(1, 10, inputRows);
+		ssResult = SpreadSheet.solve(1, 10, inputRows, "\t");
 	}
 
 	@Test

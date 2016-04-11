@@ -1,65 +1,35 @@
 package ru.edocs_lab.spreadsheet;
 
 enum Type {TEXT, NUMBER, ERROR, LINK, NULL, X3};
-enum ErrMsg {GARBAGE, DIVBY0, LOOP, CYCLE, OVERFLOW, NULLOPRND, TEXTOPRND, OUTOFRNG};
+enum ErrMsg {GARBAGE, DIV_BY_ZERO, LOOP, CYCLE, OVERFLOW, NULL_OPERAND, TEXT_OPERAND, OUT_OF_RANGE};
 
 public abstract class Cell {
 	protected static final String SHLAK_PTRN = "(^=.*[^-+/*A-Z0-9]+.*)|(.*[^0-9]$)|(^[^=1-9].*)|(.*[0-9][A-Z].*)|(.*[A-Z][-*/+].*)|(.*[A-Z][A-Z]+.*)|(.*[-*/+][-*/+]+.*)|(.*[^1-9]0[0-9]+.*)|(^=[-*/+].*)|(.*[A-Z]0.*)";
-	//непустую не-' строку будем считать шлаком, если: есть посторонние символы; заканчивается не на цифру;
-	//начинается не с = или с цифры; есть цифра перед буквой; есть операция после буквы; две и больше буквы рядом;
-	//два и больше действия рядом; ряд цифр, начинающийся с нуля; начинается с =операция; ячейка с индексом 0;
+	//РЅРµРїСѓСЃС‚СѓСЋ РЅРµ-' СЃС‚СЂРѕРєСѓ Р±СѓРґРµРј СЃС‡РёС‚Р°С‚СЊ С€Р»Р°РєРѕРј, РµСЃР»Рё: РµСЃС‚СЊ РїРѕСЃС‚РѕСЂРѕРЅРЅРёРµ СЃРёРјРІРѕР»С‹; Р·Р°РєР°РЅС‡РёРІР°РµС‚СЃСЏ РЅРµ РЅР° С†РёС„СЂСѓ;
+	//РЅР°С‡РёРЅР°РµС‚СЃСЏ РЅРµ СЃ = РёР»Рё СЃ С†РёС„СЂС‹; РµСЃС‚СЊ С†РёС„СЂР° РїРµСЂРµРґ Р±СѓРєРІРѕР№; РµСЃС‚СЊ РѕРїРµСЂР°С†РёСЏ РїРѕСЃР»Рµ Р±СѓРєРІС‹; РґРІРµ Рё Р±РѕР»СЊС€Рµ Р±СѓРєРІС‹ СЂСЏРґРѕРј;
+	//РґРІР° Рё Р±РѕР»СЊС€Рµ РґРµР№СЃС‚РІРёСЏ СЂСЏРґРѕРј; СЂСЏРґ С†РёС„СЂ, РЅР°С‡РёРЅР°СЋС‰РёР№СЃСЏ СЃ РЅСѓР»СЏ; РЅР°С‡РёРЅР°РµС‚СЃСЏ СЃ =РѕРїРµСЂР°С†РёСЏ; СЏС‡РµР№РєР° СЃ РёРЅРґРµРєСЃРѕРј 0;
 	
-	private String mLabel;
+	private final String mLabel;	
+	private final String mIn;
 	private Type mType;
-	private String mIn;
 	private String mOut;	
 	private boolean mIsProcessed;
 	
 	protected Cell(String label, String inStr) {
-		setLabel(label);
-		setInput(inStr);
+		mLabel = label;
+		mIn = inStr;
 		setProcessed(false);
 		setType(Type.X3);
 		setOutput("");
 	}
 
-	protected abstract void evaluateLocal();
+	protected abstract void evaluateLocally();
 	public abstract void evaluate();
 	
 	protected String getInput() {
 		return mIn;
 	}
 
-	protected void setInput(String in) {
-		mIn = in;
-	}
-
-	protected void setOutput(String out) {
-		mOut = out;
-	}
-
-	protected String getLabel() {
-		return mLabel;
-	}
-
-	protected void setLabel(String label) {
-		mLabel = label;
-	}
-
-	protected void setProcessed(boolean isProcessed) {
-		mIsProcessed = isProcessed;
-	}
-
-	protected void setType(Type type) {
-		mType = type;
-	}
-	
-	protected void setError(ErrMsg e) {
-		setType(Type.ERROR);
-		setOutput("#" + e.toString());
-		setProcessed(true);
-	}
-	
 	public boolean isProcessed() {
 		return mIsProcessed;
 	}
@@ -70,6 +40,28 @@ public abstract class Cell {
 	
 	public String getOutput() {
 		return mOut;
+	}	
+
+	protected String getLabel() {
+		return mLabel;
+	}
+
+	protected void setProcessed(boolean isProcessed) {
+		mIsProcessed = isProcessed;
+	}
+
+	protected void setType(Type type) {
+		mType = type;
+	}
+	
+	protected void setOutput(String out) {
+		mOut = out;
+	}
+	
+	protected void setError(ErrMsg e) {
+		setType(Type.ERROR);
+		setOutput("#" + e.toString());
+		setProcessed(true);
 	}
 	
 	@Override

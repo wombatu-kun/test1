@@ -17,21 +17,21 @@ public class ErrorTest {
 		inputRows[2] = "=2-a3*4\t=C3-42\t=40+2\t\t'ololo!11";
 		result = new String[3][5];
 		result[0][0] = "#" + ErrMsg.LOOP;
-		result[0][1] = "#" + ErrMsg.DIVBY0;
+		result[0][1] = "#" + ErrMsg.DIV_BY_ZERO;
 		result[0][2] = "#" + ErrMsg.CYCLE;
-		result[0][3] = "#" + ErrMsg.NULLOPRND;
-		result[0][4] = "#" + ErrMsg.TEXTOPRND;
+		result[0][3] = "#" + ErrMsg.NULL_OPERAND;
+		result[0][4] = "#" + ErrMsg.TEXT_OPERAND;
 		result[1][0] = "#" + ErrMsg.CYCLE;
 		result[1][1] = "#" + ErrMsg.CYCLE;
-		result[1][2] = "#" + ErrMsg.OUTOFRNG;
-		result[1][3] = "#" + ErrMsg.OUTOFRNG;
+		result[1][2] = "#" + ErrMsg.OUT_OF_RANGE;
+		result[1][3] = "#" + ErrMsg.OUT_OF_RANGE;
 		result[1][4] = "#" + ErrMsg.GARBAGE;
 		result[2][0] = "#" + ErrMsg.LOOP;
 		result[2][1] = "0";
 		result[2][2] = "42";
 		result[2][3] = "";
 		result[2][4] = "ololo!11";
-		ssResult = SpreadSheet.solve(3, 5, inputRows);
+		ssResult = SpreadSheet.solve(3, 5, inputRows, "\t");
 	}
 
 	@Test

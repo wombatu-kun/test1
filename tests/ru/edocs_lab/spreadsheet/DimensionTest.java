@@ -10,21 +10,21 @@ public class DimensionTest {
 	public void test() {
 		String ssResult[][];
 		String inputRows[] = new String[3];
-		ssResult = SpreadSheet.solve(-4, 5, inputRows);
+		ssResult = SpreadSheet.solve(-4, 5, inputRows, "\t");
 		assertNull(ssResult);
-		ssResult = SpreadSheet.solve(3, 0, inputRows);
+		ssResult = SpreadSheet.solve(3, 0, inputRows, "\t");
 		assertNull(ssResult);
-		ssResult = SpreadSheet.solve(100, 5, inputRows);
+		ssResult = SpreadSheet.solve(100, 5, inputRows, "\t");
 		assertNull(ssResult);
-		ssResult = SpreadSheet.solve(3, 27, inputRows);
+		ssResult = SpreadSheet.solve(3, 27, inputRows, "\t");
 		assertNull(ssResult);
-		ssResult = SpreadSheet.solve(2, 5, null);
+		ssResult = SpreadSheet.solve(2, 5, null, "\t");
 		assertNull(ssResult);
 		
 		inputRows[0] = "11\t12\t13\t14";
 		inputRows[1] = "21\t22\t23\t24";
 		inputRows[2] = "31\t32\t33\t34";
-		ssResult = SpreadSheet.solve(2, 2, inputRows);
+		ssResult = SpreadSheet.solve(2, 2, inputRows, "\t");
 		String result[][] = new String[2][2];
 		result[0][0] = "11";
 		result[0][1] = "12";
@@ -35,7 +35,7 @@ public class DimensionTest {
 		inputRows = new String[2];
 		inputRows[0] = "11";
 		inputRows[1] = "21\t22\t23";
-		ssResult = SpreadSheet.solve(3, 2, inputRows);
+		ssResult = SpreadSheet.solve(3, 2, inputRows, "\t");
 		result = new String[3][2];
 		result[0][0] = "11";
 		result[0][1] = "";

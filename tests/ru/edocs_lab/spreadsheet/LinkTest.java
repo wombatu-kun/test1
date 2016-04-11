@@ -14,7 +14,7 @@ public class LinkTest {
 		String inputRows[] = new String[3];
 		inputRows[0] = "=a2\t=B1\t=D1\t=E1\t=C1";
 		inputRows[1] = "=b2\t=C2\t=d2\t=e2\t=42";
-		inputRows[2] = "=b3\t\t=d3\t=e3\t'û"; 
+		inputRows[2] = "=b3\t\t=d3\t=e3\t'Ñ‹"; 
 		result = new String[3][5];
 		result[0][0] = "42";
 		result[0][1] = "#" + ErrMsg.LOOP;
@@ -26,10 +26,10 @@ public class LinkTest {
 		}
 		result[2][0] = "";
 		result[2][1] = "";
-		result[2][2] = "û";
-		result[2][3] = "û";
-		result[2][4] = "û";
-		ssResult = SpreadSheet.solve(3, 5, inputRows);
+		result[2][2] = "Ñ‹";
+		result[2][3] = "Ñ‹";
+		result[2][4] = "Ñ‹";
+		ssResult = SpreadSheet.solve(3, 5, inputRows, "\t");
 	}
 
 	@Test

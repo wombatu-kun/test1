@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class SpreadSheetDemo {
-
+	private static final String COL_SEPARATOR = "\t";
+	private static final String ROW_SEPARATOR = "\n";
+	
 	public static void main(String[] args) throws IOException {
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
 			String inStr = reader.readLine();
@@ -15,7 +17,7 @@ public class SpreadSheetDemo {
 				for (int row = 0; row < dims[0]; row++) {
 					inputRows[row] = reader.readLine();
 				}
-				String result[][] = SpreadSheet.solve(dims[0], dims[1], inputRows);
+				String result[][] = SpreadSheet.solve(dims[0], dims[1], inputRows, COL_SEPARATOR);
 				printResult(result);
 			} else {
 				System.out.println("Format: rowCount\tcolumnCount");
@@ -27,10 +29,10 @@ public class SpreadSheetDemo {
 
 	private static int[] parseDimensions(String inStr) {
 		try {
-			if (!inStr.contains("\t")) {
+			if (!inStr.contains(COL_SEPARATOR)) {
 				return null;
 			}
-			String strDims[] = inStr.split("\t", 2);
+			String strDims[] = inStr.split(COL_SEPARATOR, 2);
 			int dims[] = new int[2];
 			dims[0] = Integer.parseInt(strDims[0]);
 			dims[1] = Integer.parseInt(strDims[1]);
@@ -51,9 +53,9 @@ public class SpreadSheetDemo {
 		for (int row = 0; row < result.length; row++) {
 			System.out.print(result[row][0]);
 			for (int col = 1; col < result[row].length; col++) {
-				System.out.print("\t" + result[row][col]);
+				System.out.print(COL_SEPARATOR + result[row][col]);
 			}
-			System.out.print("\n");
+			System.out.print(ROW_SEPARATOR);
 		}
 	}
 

@@ -28,7 +28,7 @@ public class ExampleTest {
 		result[2][1] = "1";
 		result[2][2] = "5";
 		result[2][3] = "Sheet";
-		ssResult = SpreadSheet.solve(3, 4, inputRows);
+		ssResult = SpreadSheet.solve(3, 4, inputRows, "\t");
 	}
 
 	@Test
